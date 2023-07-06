@@ -29,10 +29,17 @@ pipeline {
         stage('推送镜像') {
             steps {
                 sh '''
-                    docker push 192.168.96.141/library/ruoyi-nginx
-                    docker push 192.168.96.141/library/ruoyi-java
+                    docker push 192.168.96.141/library/ruoyi-nginx:${tag}
+                    docker push 192.168.96.141/library/ruoyi-java:${tag}
                 '''
                 echo "镜像推送完成"
+            }
+        }
+        stage('运行') {
+            steps {
+                 sh '''
+                    kubectl apply -f ./cloud/deploy
+                 '''
             }
         }
     }
