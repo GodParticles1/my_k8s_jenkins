@@ -15,7 +15,7 @@ pipeline {
         }
         stage('后端代码打包') {
             steps {
-                sh "mvn clean package -Dmaven.test.skip=true"
+                sh "mvn clean package -Dmaven.test.skip=true && cp ruoyi-admin/target/ruoyi-admin.jar cloud/ruoyi-java"
                 echo "后端代码打包完成"
             }
         }

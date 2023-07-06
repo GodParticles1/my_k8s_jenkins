@@ -1,6 +1,6 @@
 FROM java:8-jre-alpine
 
-COPY ruoyi-admin/target/ruoyi-admin.jar /
+COPY ruoyi-admin.jar /
 
 EXPOSE 8080
 
