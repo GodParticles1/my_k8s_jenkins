@@ -16,6 +16,7 @@ spec:
       containers:
       - name: ruoyi-java
         image: 192.168.96.141/library/ruoyi-java:v2.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
       hostAliases:

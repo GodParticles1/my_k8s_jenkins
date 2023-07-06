@@ -15,6 +15,7 @@ spec:
       containers:
       - name: ruoyi-nginx
         image: 192.168.96.141/library/ruoyi-nginx:v2.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 
