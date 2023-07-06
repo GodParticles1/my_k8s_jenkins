@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ruoyi-nginx
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: ruoyi-nginx
@@ -14,11 +14,7 @@ spec:
     spec:
       containers:
       - name: ruoyi-nginx
-        image: 192.168.96.141/library/ruoyi-nginx
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
+        image: 192.168.96.141/library/ruoyi-nginx:v1.0
         ports:
         - containerPort: 80
 

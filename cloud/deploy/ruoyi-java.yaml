@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: ruoyi-java
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
       app: ruoyi-java
@@ -15,11 +15,7 @@ spec:
     spec:
       containers:
       - name: ruoyi-java
-        image: 192.168.96.141/library/ruoyi-java
-        resources:
-          limits:
-            memory: "1024Mi"
-            cpu: "1000m"
+        image: 192.168.96.141/library/ruoyi-java:v1.0
         ports:
         - containerPort: 8080
       hostAliases:
@@ -41,24 +37,3 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ruoyi-java-ingress
-  labels:
-    name: ruoyi-java-ingress
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: java.server
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: ruoyi-java-service
-            port: 
-              number: 8080
