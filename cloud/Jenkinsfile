@@ -23,7 +23,7 @@ pipeline {
             steps {
                 sh "docker build -t ruoyi-nginx cloud/ruoyi-nginx"
                 echo "构建镜像完成"
-                sh "docker build -t ruoyi-nginx cloud/ruoyi-java"
+                sh "docker build -t ruoyi-java cloud/ruoyi-java"
             }
         }
     }
