@@ -21,9 +21,9 @@ pipeline {
         }
         stage('构建镜像') {
             steps {
-                sh "docker build -t ruoyi-nginx cloud/ruoyi-nginx"
+                sh "cd cloud/ruoyi-nginx && docker build -t ruoyi-nginx ."
+                sh "cd cloud/ruoyi-java && docker build -t ruoyi-java ."
                 echo "构建镜像完成"
-                sh "docker build -t ruoyi-java cloud/ruoyi-java"
             }
         }
     }
