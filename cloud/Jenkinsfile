@@ -21,9 +21,19 @@ pipeline {
         }
         stage('构建镜像') {
             steps {
-                sh "docker build -t ruoyi-nginx cloud/ruoyi-nginx"
+                sh "docker build -t 192.168.96.141/library/ruoyi-nginx cloud/ruoyi-nginx"
                 echo "构建镜像完成"
-                sh "docker build -t ruoyi-java cloud/ruoyi-java"
+                sh "docker build -t 192.168.96.141/library/ruoyi-java cloud/ruoyi-java"
+            }
+        }
+        stage('推送镜像') {
+            steps {
+                sh '''
+                    docker login -u admin:Harbor12345 192.168.96.141
+                    docker push 192.168.96.141/library/ruoyi-nginx
+                    docker push 192.168.96.141/library/ruoyi-java
+                '''
+                echo "镜像推送完成"
             }
         }
     }
