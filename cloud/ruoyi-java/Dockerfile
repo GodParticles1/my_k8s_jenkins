@@ -4,4 +4,4 @@ COPY ruoyi-admin.jar /opt
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "/opt/ruoyi-admin.jar"]
+CMD ["/usr/loca/jdk1.8.0_211/bin/java", "-jar", "/opt/ruoyi-admin.jar"]
