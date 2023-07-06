@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: ruoyi-nginx
-        image: 192.168.96.141/library/ruoyi-nginx:v1.0
+        image: 192.168.96.141/library/ruoyi-nginx:v2.0
         ports:
         - containerPort: 80
 
