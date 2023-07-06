@@ -1,4 +1,4 @@
-FROM java:8-jre-alpine
+FROM dockette/jdk8
 
 COPY ruoyi-admin.jar /
 
