@@ -1,4 +1,4 @@
-FROM pull buildo/java8-wkhtmltopdf:latest
+FROM buildo/java8-wkhtmltopdf:latest
 
 COPY ruoyi-admin.jar /opt
 
