@@ -1,7 +1,7 @@
-FROM dockette/jdk8
+FROM 192.168.96.141/library/java:8
 
-COPY ruoyi-admin.jar /
+COPY ruoyi-admin.jar /opt
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "/ruoyi-admin.jar"]
+CMD ["java", "-jar", "/opt/ruoyi-admin.jar"]
