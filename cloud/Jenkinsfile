@@ -29,7 +29,6 @@ pipeline {
         stage('推送镜像') {
             steps {
                 sh '''
-                    docker login -u admin:Harbor12345 192.168.96.141
                     docker push 192.168.96.141/library/ruoyi-nginx
                     docker push 192.168.96.141/library/ruoyi-java
                 '''
