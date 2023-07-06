@@ -22,6 +22,13 @@ spec:
             cpu: "1000m"
         ports:
         - containerPort: 8080
+      hostAliases:
+        - ip: "192.168.96.160"
+          hostnames:
+            - "mysql.server"
+        - ip: "192.168.96.141"
+          hostnames:
+            - "redis.server"
 
 ---
 apiVersion: v1
