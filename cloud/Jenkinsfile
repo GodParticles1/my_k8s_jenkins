@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        PATH+EXTRA = "/opt/maven3.8.8/bin:/opt/node/bin"
+    }
     tools {
 	    maven 'maven388'
 	}
