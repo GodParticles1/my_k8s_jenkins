@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+    tools {
+	    maven 'maven388'
+	}
+    stages {
+        stage('前端代码打包') {
+            steps {
+                sh "cd ruoyi-ui && npm install && npm run build:prod"
+                echo "前端代码打包完成"
+            }
+        }
+        stage('后端代码打包') {
+            steps {
+                sh "mvn clean package -Dmaven.test.skip=true"
+                echo "后端代码打包完成"
+            }
+        }
+        stage('构建镜像') {
+            steps {
+                sh "docker build -t ruoyi-nginx cloud/ruoyi-nginx"
+                echo "构建镜像完成"
+                sh "docker build -t ruoyi-nginx cloud/ruoyi-java"
+            }
+        }
+    }
+}
