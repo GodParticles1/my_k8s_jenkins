@@ -249,7 +249,7 @@ pipeline {
                 container('kubectl') {
                     sh """
                       sed -i "s/REPLICAS/${env.JAVA_REPLICAS}/;s/HARBOR_HOST/${env.HARBOR_HOST}/;s/NAMESPACE_NAME/${env.NAMESPACE_NAME}/;s/REPOSITORY_NAME/${env.JAVA_REPOSITORY_NAME}/;s/TAG/${env.JAVA_TAG}/" ${env.YAML_PATH}${env.JAVA_DEPLOYMENT_NAME}
-                      sed -i "s/REPLICAS/${env.JAVA_REPLICAS}/;s/HARBOR_HOST/${env.HARBOR_HOST}/;s/NAMESPACE_NAME/${env.NAMESPACE_NAME}/;s/REPOSITORY_NAME/${env.NODE_REPOSITORY_NAME}/;s/TAG/${env.NODE_TAG}/" ${env.YAML_PATH}${env.NODE_DEPLOYMENT_NAME}
+                      sed -i "s/REPLICAS/${env.NODE_REPLICAS}/;s/HARBOR_HOST/${env.HARBOR_HOST}/;s/NAMESPACE_NAME/${env.NAMESPACE_NAME}/;s/REPOSITORY_NAME/${env.NODE_REPOSITORY_NAME}/;s/TAG/${env.NODE_TAG}/" ${env.YAML_PATH}${env.NODE_DEPLOYMENT_NAME}
                       kubectl apply -f ${env.YAML_PATH} --record
                     """
                 }
