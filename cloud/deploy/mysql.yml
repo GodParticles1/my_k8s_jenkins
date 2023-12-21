@@ -31,7 +31,7 @@ spec:
       volumes:
       - name: ruoyi-data
         configMap:
-          name: maven-repo
+          name: ruoyi-init-data
 
 ---
 apiVersion: v1
