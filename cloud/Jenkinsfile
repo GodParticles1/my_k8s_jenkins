@@ -1,7 +1,7 @@
 pipeline {
     environment {
         PROJECT_NAME = "ruoyi"
-        DOCKER_REPOSITORY_CREDENTIAL_ID = "7cc63152-c727-40fc-b177-d8397396f1ba"
+        DOCKER_REPOSITORY_CREDENTIAL_ID = "2aba2cf0-e2e7-4e7d-8664-feb9268fb39e"
         HARBOR_HOST = "registry.cn-hangzhou.aliyuncs.com"
         NAMESPACE_NAME = "newrain_wang"
         JAVA_REPOSITORY_NAME = "ruoyi-java"
