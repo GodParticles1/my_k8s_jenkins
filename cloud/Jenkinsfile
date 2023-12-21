@@ -41,6 +41,8 @@ pipeline {
                   name: "maven-repo"
                   subPath: "settings.xml"
                   readOnly: true
+                - mountPath: "/root/.m2"
+                  name: "maven-data"
               - name: nodejs
                 image: node:14
                 command: ['cat']
@@ -85,6 +87,8 @@ pipeline {
               - name: maven-repo
                 configMap:
                   name: maven-repo
+              - name: maven-data
+                hostPath: "/opt/data/m2"
             """
         }
     }
