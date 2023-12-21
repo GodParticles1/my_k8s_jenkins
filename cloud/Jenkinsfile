@@ -1,103 +1,295 @@
 pipeline {
-    agent any
     environment {
-        PATH = "/opt/maven3.8.8/bin:/opt/node/bin:${env.PATH}"
+        PROJECT_NAME = "ruoyi"
+        DOCKER_REPOSITORY_CREDENTIAL_ID = "7cc63152-c727-40fc-b177-d8397396f1ba"
+        HARBOR_HOST = "registry.cn-hangzhou.aliyuncs.com"
+        NAMESPACE_NAME = "newrain_wang"
+        JAVA_REPOSITORY_NAME = "ruoyi-java"
+        NODE_REPOSITORY_NAME = "rupyi-node"
+        JAVA_TAG = "v1.0"
+        NODE_TAG = "v1.0"
+        JAVA_REPLICAS = 4
+        NODE_REPLICAS = 2
+        YAML_PATH = "cloud/deploy/"
+        JAVA_DEPLOYMENT_NAME = "ruoyi-java.yaml"
+        NODE_DEPLOYMENT_NAME = "ruoyi-nginx.yaml"
+        STATUS_URL = "http://qf.jenkins.vip:30210/job/ruoyi/${BUILD_NUMBER}"
+        CONSOLE_URL = "http://qf.jenkins.vip:30210/job/ruoyi/${BUILD_NUMBER}/console"
     }
-    tools {
-	    maven 'maven388'
-	}
+    agent {
+        kubernetes {
+            cloud "kubernetes"
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: jnlp
+                image: jenkins/inbound-agent:3107.v665000b_51092-15
+                args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+                imagePullPolicy: IfNotPresent
+                volumeMounts:
+                - mountPath: "/etc/localtime"
+                  name: "volume-2"
+                  readOnly: false
+              - name: maven
+                image: maven:3.6.3-jdk-11
+                command: ['cat']
+                tty: true
+                volumeMount:
+                - mountPath: "/usr/share/maven/ref/"
+                  name: "maven-repo"
+                  subPath: "settings.xml"
+                  readOnly: true
+              - name: nodejs
+                image: node:14
+                command: ['cat']
+                tty: true
+              - name: kubectl
+                image: kubesphere/kubectl:v1.22.0
+                imagePullPolicy: IfNotPresent
+                tty: true
+                command: ["cat"]
+                volumeMounts:
+                - mountPath: "/etc/localtime"
+                  name: "volume-2"
+                  readOnly: false
+                - mountPath: "/var/run/docker.sock"
+                  name: "volume-docker"
+                  readOnly: false
+                - mountPath: "/root/.kube"
+                  subPath: config
+                  name: "kubeconfig"
+                  readOnly: false
+              - name: docker
+                image: docker:19.03.15-git
+                command: ['cat']
+                tty: true
+                volumeMounts:
+                - mountPath: "/var/run/docker.sock"
+                  name: "volume-docker"
+                  readOnly: false
+              volumes:
+              - name: volume-2
+                hostPath:
+                  path: "/usr/share/zoneinfo/Asia/Shanghai"
+              - name: volume-docker
+                hostPath:
+                  path: "/var/run/docker.sock"
+              - name: kubeconfig
+                secret:
+                  secretName: kubeconfig
+                  items:
+                  - key: config
+                    path: config
+              - name: maven-repo
+                configMap:
+                  configMapName: maven-repo
+                  items:
+                  - key: settings.xml
+                    path: settings.xml
+            """
+        }
+    }
     stages {
-        stage('前端代码打包') {
+        stage('Maven 打包') {
             steps {
-                sh "cd ruoyi-ui && npm install && npm run build:prod && cp -r dist ../cloud/ruoyi-nginx"
-                echo "前端代码打包完成"
+                container('maven') {
+                    sh """
+                       sh "mvn clean package -Dmaven.test.skip=true && cp ruoyi-admin/target/ruoyi-admin.jar cloud/ruoyi-java"
+                    """
+                }
+            }
+            post {
+                success {
+                    // Maven 打包成功的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '后端打包成功 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#00FF00 >成功</font>',
+                            '- 阶段：后端打包',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
+                failure {
+                    // Maven 打包失败的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '后端打包失败 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#FF0000 >失败</font>',
+                            '- 阶段：后端打包',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
             }
         }
-        stage('后端代码打包') {
+
+        stage('Node.js 打包') {
             steps {
-                sh "mvn clean package -Dmaven.test.skip=true && cp ruoyi-admin/target/ruoyi-admin.jar cloud/ruoyi-java"
-                echo "后端代码打包完成"
+                container('nodejs') {
+                    sh """
+                       cd ruoyi-ui && npm install --registry http://registry.npmmirror.com && npm run build:prod && cp -r dist ../cloud/ruoyi-nginx
+                    """
+                }
+            }
+            post {
+                success {
+                    // Node.js 打包成功的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '前端打包成功 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#00FF00 >成功</font>',
+                            '- 阶段：前端打包',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
+                failure {
+                    // Node.js 打包失败的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '前端打包失败 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#FF0000 >失败</font>',
+                            '- 阶段：前端打包',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
             }
         }
+
         stage('构建镜像') {
             steps {
-                sh "docker build -t ${html_image_repo}:${tag} cloud/ruoyi-nginx"
-                echo "构建镜像完成"
-                sh "docker build -t ${java_image_repo}:${tag} cloud/ruoyi-java"
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_REPOSITORY_CREDENTIAL_ID, passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+                    container('docker') {
+                        sh """
+                          docker build -t ${env.HARBOR_HOST}/${env.NAMESPACE_NAME}/${env.JAVA_REPOSITORY_NAME}:${env.JAVA_TAG} cloud/ruoyi-java
+                          docker build -t ${env.HARBOR_HOST}/${env.NAMESPACE_NAME}/${env.NODE_REPOSITORY_NAME}:${env.NODE_TAG} cloud/ruoyi-nginx
+                          docker login ${env.HARBOR_HOST} --username ${env.USERNAME} --password ${env.PASSWORD}
+                          docker push ${env.HARBOR_HOST}/${env.NAMESPACE_NAME}/${env.JAVA_REPOSITORY_NAME}:${env.JAVA_TAG}
+                          docker push ${env.HARBOR_HOST}/${env.NAMESPACE_NAME}/${env.NODE_REPOSITORY_NAME}:${env.NODE_TAG}
+                        """
+                    }
+                }
+            }
+            post {
+                success {
+                    // 构建镜像成功的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '镜像构建成功 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#00FF00 >成功</font>',
+                            '- 阶段：构建镜像',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
+                failure {
+                    // 构建镜像失败的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: '镜像构建失败 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#FF0000 >失败</font>',
+                            '- 阶段：构建镜像',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
             }
         }
-        stage('推送镜像') {
+
+        stage('部署到kubernetes') {
             steps {
-                sh '''
-                    docker push ${html_image_repo}:${tag}
-                    docker push ${java_image_repo}:${tag}
-                '''
-                echo "镜像推送完成"
+                container('kubectl') {
+                    sh """
+                      sed -i "s/REPLICAS/${env.JAVA_REPLICAS}/;s/HARBOR_HOST/${env.HARBOR_HOST}/;s/NAMESPACE_NAME/${env.NAMESPACE_NAME}/;s/REPOSITORY_NAME/${env.JAVA_REPOSITORY_NAME}/;s/TAG/${env.JAVA_TAG}/" ${env.YAML_PATH}${env.JAVA_DEPLOYMENT_NAME}
+                      sed -i "s/REPLICAS/${env.JAVA_REPLICAS}/;s/HARBOR_HOST/${env.HARBOR_HOST}/;s/NAMESPACE_NAME/${env.NAMESPACE_NAME}/;s/REPOSITORY_NAME/${env.NODE_REPOSITORY_NAME}/;s/TAG/${env.NODE_TAG}/" ${env.YAML_PATH}${env.NODE_DEPLOYMENT_NAME}
+                      kubectl apply -f ${env.YAML_PATH}
+                    """
+                }
             }
-        }
-        stage('运行') {
-            steps {
-                 sh '''
-                    kubectl apply -f ./cloud/deploy
-                 '''
+            post {
+                success {
+                    // 部署成功的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: 'k8s部署成功 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#00FF00 >成功</font>',
+                            '- 阶段：部署yaml',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
+                failure {
+                    // 部署失败的钉钉消息配置
+                    dingtalk (
+                        robot: '4eabbd09-a21a-40a9-84db-6440c0daebec',
+                        type: 'MARKDOWN',
+                        title: 'k8s部署失败 ${PROJECT_NAME}',
+                        text: [
+                            '### 项目 ${PROJECT_NAME}',
+                            '---',
+                            '- 状态：<font color=#FF0000 >失败</font>',
+                            '- 阶段：部署yaml',
+                            '- 版本：${BUILD_NUMBER}',
+                            '- [查看部署详情](${STATUS_URL})',
+                            '- [查看日志Console](${CONSOLE_URL})'
+                        ],
+                        at: ['17694993496']
+                    )
+                }
             }
-        }
-    }
-        post {
-        always {
-            emailext (
-                subject: '项目 【$PROJECT_NAME】 第【$BUILD_NUMBER】次构建 - $BUILD_STATUS!',
-                body: '''
-<!DOCTYPE html>    
-<html>    
-<head>    
-<meta charset="UTF-8">    
-<title>${ENV, var="JOB_NAME"}-第${BUILD_NUMBER}次构建日志</title>    
-</head>    
-
-<body leftmargin="8" marginwidth="0" topmargin="8" marginheight="4"    
-    offset="0">    
-    <table width="95%" cellpadding="0" cellspacing="0"  style="font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif">
-<h3>本邮件由系统自动发出，请勿回复！</h3>    
-        <tr>    
-           <br/>            
-            各位同事，大家好，以下为${PROJECT_NAME }项目构建信息</br> 
-            <td><font color="#CC0000">构建结果 - ${BUILD_STATUS}</font></td>   
-        </tr>    
-        <tr>    
-            <td><br />    
-            <b><font color="#0B610B">构建信息</font></b>    
-            <hr size="2" width="100%" align="center" /></td>    
-        </tr>    
-        <tr>    
-            <td>    
-                <ul>    
-                    <li>项目名称 ： ${PROJECT_NAME}</li>    
-                    <li>构建编号 ： 第${BUILD_NUMBER}次构建</li>    
-                    <li>触发原因： ${CAUSE}</li>    
-                    <li>构建状态： ${BUILD_STATUS}</li>    
-                    <li>构建日志： <a href="${BUILD_URL}console">${BUILD_URL}console</a></li>    
-                    <li>构建  Url ： <a href="${BUILD_URL}">${BUILD_URL}</a></li>    
-                    <li>工作目录 ： <a href="${PROJECT_URL}ws">${PROJECT_URL}ws</a></li>    
-                    <li>项目  Url ： <a href="${PROJECT_URL}">${PROJECT_URL}</a></li>    
-                </ul>    
-
-<h4><font color="#0B610B">最近提交</font></h4>
-<ul>
-<hr size="2" width="100%" />
-${CHANGES_SINCE_LAST_SUCCESS, reverse=true, format="%c", changesFormat="<li>%d [%a] %m</li>"}
-</ul>
-详细提交: <a href="${PROJECT_URL}changes">${PROJECT_URL}changes</a><br/>
-
-            </td>    
-        </tr>    
-    </table>    
-</body>    
-</html>
-''',
-                to: '1161733918@qq.com',
-                attachLog: true
-            )
         }
     }
 }
