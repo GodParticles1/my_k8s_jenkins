@@ -93,7 +93,7 @@ pipeline {
             steps {
                 container('maven') {
                     sh """
-                       sh "mvn clean package -Dmaven.test.skip=true && cp ruoyi-admin/target/ruoyi-admin.jar cloud/ruoyi-java"
+                       mvn clean package -Dmaven.test.skip=true && cp ruoyi-admin/target/ruoyi-admin.jar cloud/ruoyi-java
                     """
                 }
             }
