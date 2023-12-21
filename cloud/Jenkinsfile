@@ -88,7 +88,8 @@ pipeline {
                 configMap:
                   name: maven-repo
               - name: maven-data
-                hostPath: "/opt/data/m2"
+                hostPath: 
+                  path: "/opt/data/m2"
             """
         }
     }
