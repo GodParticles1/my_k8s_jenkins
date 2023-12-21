@@ -34,11 +34,14 @@ spec:
           name: maven-repo
 
 ---
-service:
+apiVersion: v1
+kind: Service
+metadata:
   name: ruoyi-db
+spec:
   selector:
     app: database
   ports:
-  - protocol: TCP
-    port: 3306
+  - port: 3306
     targetPort: 3306
+
