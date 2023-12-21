@@ -57,7 +57,7 @@ pipeline {
                 - mountPath: "/var/run/docker.sock"
                   name: "volume-docker"
                   readOnly: false
-                - mountPath: "/root/.kube"
+                - mountPath: "/root/.kube/config"
                   subPath: config
                   name: "kubeconfig"
                   readOnly: false
