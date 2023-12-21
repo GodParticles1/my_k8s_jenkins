@@ -84,10 +84,7 @@ pipeline {
                     path: config
               - name: maven-repo
                 configMap:
-                  configMapName: maven-repo
-                  items:
-                  - key: settings.xml
-                    path: settings.xml
+                  name: maven-repo
             """
         }
     }
