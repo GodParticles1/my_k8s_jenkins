@@ -17,12 +17,21 @@ spec:
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "123456"
+        - name: MYSQL_DATABASE
+          value: "ry"
+        volumeMounts:
+          - mountPath: /docker-entrypoint-initdb.d
+            name: ruoyi-data
         resources:
           limits:
             memory: "500Mi"
             cpu: "500m"
         ports:
         - containerPort: 3306
+      volumes:
+        name: ruoyi-data
+        configMap:
+          name: maven-repo
 
 ---
 service:
