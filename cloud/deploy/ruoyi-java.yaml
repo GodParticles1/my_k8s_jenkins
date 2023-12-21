@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: ruoyi-java
 spec:
-  replicas: 2
+  replicas: REPLICAS
   selector:
     matchLabels:
       app: ruoyi-java
@@ -15,17 +15,10 @@ spec:
     spec:
       containers:
       - name: ruoyi-java
-        image: 192.168.75.181/library/java:v1.0
+        image: HARBOR_HOST/NAMESPACE_NAME/REPOSITORY_NAME:TAG
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
-      hostAliases:
-        - ip: "192.168.96.160"
-          hostnames:
-            - "mysql.server"
-        - ip: "192.168.96.141"
-          hostnames:
-            - "redis.server"
 
 ---
 apiVersion: v1
